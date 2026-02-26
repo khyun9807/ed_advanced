@@ -33,7 +33,7 @@ management:
 
 logging:
   level:
-    com.optpractice: debug
+    com.community_code: debug
 
 server:
   tomcat:

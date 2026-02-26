@@ -14,16 +14,13 @@ import com.community_code.user.entity.User;
 import com.community_code.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -34,6 +31,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final MerchantRepository merchantRepository;
     private final CommentService commentService;
+    private final PostCacheService postCacheService;
 
     /**
      * 게시글 작성
@@ -142,43 +140,8 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<PostResponse.PostList> getPosts(Long merchantId, PostType type, Pageable pageable) {
-
-        Page<Long> idPage;
-        if(merchantId == null&&type == null) {
-            idPage = postRepository.findActivePostIds(pageable);
-        }
-        else if(merchantId==null){
-            idPage = postRepository.findActivePostIdsByType(type, pageable);
-        }
-        else if(type==null){
-            idPage = postRepository.findActivePostIdsByMerchant(merchantId, pageable);
-        }
-        else{
-            idPage = postRepository.findActivePostIdsByMerchantAndType(merchantId, type, pageable);
-        }
-
-        Page<Post> posts = assemblePage(idPage, pageable);
-
-        log.info("post 조회 완료 {}", posts);
-
-        return posts.map(PostResponse.PostList::from);
+        return postCacheService.getPostsCached(merchantId, type, pageable).toPage(pageable);
     }
 
-    private Page<Post> assemblePage(Page<Long> idPage, Pageable pageable) {
-        List<Long> ids = idPage.getContent();
-        if (ids.isEmpty()) {
-            return new PageImpl<>(List.of(), pageable, idPage.getTotalElements());
-        }
-
-        List<Post> posts = postRepository.fetchWithAuthorAndMerchantByIds(ids);
-
-        // ✅ idPage의 순서대로 정렬 복원
-        Map<Long, Integer> order = new HashMap<>();
-
-        for (int i = 0; i < ids.size(); i++) order.put(ids.get(i), i);
-        posts.sort(Comparator.comparingInt(p -> order.get(p.getId())));
-
-        return new PageImpl<>(posts, pageable, idPage.getTotalElements());
-    }
 
 }
