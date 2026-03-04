@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: stock_concurrency_project
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    # (선택) show-sql 출력이 보기 힘들면 포맷 옵션 추가 가능
+    # properties:
+    #   hibernate:
+    #     format_sql: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/stock_concurrency_db
+    username: root
+    password: 1234
+    hikari:
+      maximum-pool-size: 40
+
+logging:
+  level:
+    # Hibernate가 실행하는 SQL 출력
+    org.hibernate.SQL: debug
+
+    # Hibernate 7.x: PreparedStatement에 바인딩되는 파라미터 값 출력(= 예전 BasicBinder 역할)
+    org.hibernate.orm.jdbc.bind: trace
+
+    # (선택) ResultSet에서 값 꺼내는 로그까지 보고 싶으면 추가
+    # org.hibernate.orm.jdbc.extract: trace
