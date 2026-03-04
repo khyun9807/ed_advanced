@@ -16,6 +16,8 @@ public class StockService {
     public void decrease(Long stockId, Long quantity) {
         Stock stock = stockRepository.findById(stockId).orElseThrow();
 
+        //원자적으로 업데이트하는 대신 메모리 상에서 임시 업데이트 후 저장
+        //repository.updateQuantity(quantity);
         stock.decrease(quantity);
 
         stockRepository.save(stock);

@@ -1,0 +1,32 @@
+services:
+  kafka:
+    image: apache/kafka:4.2.0
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"   # 호스트(로컬 PC)에서 접속: localhost:9092
+    environment:
+      # KRaft(=ZooKeeper 없는 모드) 단일 노드(브로커+컨트롤러) 구성
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:29093"
+
+      # 리스너: 컨테이너 내부용(19092) + 호스트용(9092) + 컨트롤러용(29093)
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_LISTENERS: "CONTROLLER://:29093,PLAINTEXT://:19092,PLAINTEXT_HOST://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:19092,PLAINTEXT_HOST://localhost:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+
+      # 클러스터 ID (예시값). 유지해도 되고, 바꾸고 싶으면 kafka-storage.sh random-uuid 로 새로 생성
+      CLUSTER_ID: "4L6g3nShT-eMCtK--X86sw"
+
+      # 단일 브로커 개발환경에서 필수로 1로 낮춰주는 것들
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 1
+
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
