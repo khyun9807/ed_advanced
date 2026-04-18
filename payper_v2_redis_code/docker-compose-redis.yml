@@ -1,0 +1,49 @@
+# ============================================================
+# AWS ElastiCache 프리티어 (cache.t3.micro) 동일 스펙 Redis
+#
+#   cache.t3.micro 사양:
+#     - vCPU: 2
+#     - 메모리: 512 MiB
+#     - 네트워크: 최대 5 Gbps
+#
+#   ElastiCache 기본 reserved-memory-percent: 25%
+#     - Redis maxmemory = 512MB * 0.75 = 384MB
+# ============================================================
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: payper-redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 384mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --tcp-backlog 128
+      --maxclients 65000
+      --hz 10
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  redis-data:

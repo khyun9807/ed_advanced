@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec:*)",
+      "Bash(./gradlew dependencies:*)",
+      "Bash(javap:*)",
+      "Bash(jar xf:*)"
+    ]
+  }
+}
